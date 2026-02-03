@@ -6,12 +6,16 @@
 ---
 
   Dimas Celestino - Desenvolvedor(a)
+
+  Douglas Henrique - Desenvolvedor(a)
   
   José Portela - Desenvolvedor(a)
   
   Julio Neto - Desenvolvedor(a)
   
   Pedro Tobias - Desenvolvedor(a)
+
+  Rener Tomé - Desenvolvedor(a)
 
 <br>
   
