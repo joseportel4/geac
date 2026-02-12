@@ -36,7 +36,6 @@ export default function SignInPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
       
-      // CORRIGIDO: endpoint correto é /auth/login
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -54,17 +53,15 @@ export default function SignInPage() {
 
       const data = await response.json();
 
-      // Armazena o token
       if (data.token) {
         localStorage.setItem("token", data.token);
-        // Armazena também o email/nome do usuário se necessário
+
         localStorage.setItem("user", JSON.stringify({ 
           email: formData.email,
-          name: formData.email.split('@')[0] // Nome temporário baseado no email
+          name: formData.email.split('@')[0]
         }));
       }
 
-      // Redireciona para a home após login
       router.push("/");
       router.refresh();
 

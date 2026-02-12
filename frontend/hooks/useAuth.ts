@@ -11,7 +11,7 @@ export function useAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    // Verifica se o usuário está autenticado ao montar o componente
+
     const checkAuth = () => {
       const isAuth = authService.isAuthenticated();
       

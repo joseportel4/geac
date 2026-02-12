@@ -69,7 +69,6 @@ export function Navbar() {
     }
   };
 
-  // Evita problemas de hidratação
   if (!mounted) {
     return (
       <nav className="bg-white dark:bg-zinc-900 shadow-lg border-b border-zinc-200 dark:border-zinc-800">
