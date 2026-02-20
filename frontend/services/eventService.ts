@@ -14,38 +14,16 @@ function mapBackendToEvent(dto: any): Event {
   const startHour = dto.startTime ? dto.startTime.split("T")[1]?.substring(0, 5) : "";
   const endHour = dto.endTime ? dto.endTime.split("T")[1]?.substring(0, 5) : "";
 
-  // Mapeamento reverso de categoryId para nome
-  const categoryNames: Record<number, string> = {
-    1: "palestra",
-    2: "seminario",
-    3: "workshop",
-    4: "cultural",
-    5: "feira",
-    6: "livre",
-    7: "conferencia",
-    8: "festival",
-    9: "outro",
-  };
-
-  const campusNames: Record<number, string> = {
-    1: "reitoria",
-    2: "ondina",
-    3: "sao lazaro",
-    4: "canela",
-    5: "graca",
-    6: "federacao",
-  };
-
   return {
     id: String(dto.id),
     title: dto.title ?? "",
     description: dto.description ?? "",
-    category: (categoryNames[dto.categoryId] ?? "outro") as Event["category"],
+    category: (dto.categoryName?.toLowerCase() || "outro") as Event["category"],
     date: startDate,
     startTime: startHour,
     endTime: endHour,
-    location: campusNames[dto.locationId] ?? "Campus",
-    campus: (campusNames[dto.locationId] ?? "ondina") as Event["campus"],
+    location: dto.onlineLink ? "Evento Online" : (dto.location?.name ?? "Local Indefinido"),
+    campus: (dto.location?.city?.toLowerCase() || "ondina") as Event["campus"],
     speakers: [],
     capacity: dto.maxCapacity ?? 0,
     registered: 0,
@@ -66,7 +44,7 @@ export const eventService = {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
-    const res = await fetch(`${API_URL}/events/`, {
+    const res = await fetch(`${API_URL}/events`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

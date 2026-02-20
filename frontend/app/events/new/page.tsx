@@ -1,7 +1,13 @@
 import { RoleGuard } from "@/components/auth/RoleGuard";
-import CreateEventForm from "@/app/events/CreateEventForm"; // Componente do formulário
+import CreateEventForm from "@/app/events/CreateEventForm";
+import { getCategories, getLocations, getRequirements } from "@/app/actions/domainActions";
 
-export default function NewEventPage() {
+export default async function NewEventPage() {
+
+  const categories = await getCategories();
+  const locations = await getLocations();
+  const requirements = await getRequirements();
+
   return (
     <RoleGuard allowedRoles={["PROFESSOR"]}>
       <div className="min-h-screen bg-gray-50 dark:bg-black py-12">
@@ -15,7 +21,12 @@ export default function NewEventPage() {
             </p>
           </div>
           
-          <CreateEventForm />
+          {/* Passamos as listas reais como propriedades para o form */}
+          <CreateEventForm 
+            categories={categories} 
+            locations={locations} 
+            requirements={requirements} 
+          />
         </div>
       </div>
     </RoleGuard>

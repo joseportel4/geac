@@ -43,24 +43,43 @@ export interface EventRequestDTO {
   description: string;
   startTime: string; 
   endTime: string;
-  categoryId: number; // Backend pede número
-  locationId: number; // Backend pede número
+  categoryId: number; 
+  requirementId: number;
+  locationId?: number;
   workloadHours: number;
   maxCapacity: number;
-  onlineLink?: string;
+  onlineLink?: string; 
+}
+
+export interface LocationResponseDTO {
+  id: number;
+  name: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  referencePoint: string;
+  capacity: number;
 }
 
 export interface EventResponseDTO {
-  id: number;
+  id: string;
   title: string;
   description: string;
+  onlineLink?: string;
   startTime: string;
   endTime: string;
   workloadHours: number;
   maxCapacity: number;
-  onlineLink?: string;
-  // O backend pode retornar o objeto completo ou apenas o ID/Nome
-  // Ajuste conforme o JSON que seu backend retorna
-  category?: { id: number; name: string } | string; 
-  location?: { id: number; name: string } | string;
+  status: string;
+  createdAt: string;
+  categoryId: number;
+  categoryName: string;
+  location?: LocationResponseDTO;
+  organizerName: string;
+  organizerEmail: string;
+  requirementId: number;
+  requirementDescription: string;
 }
