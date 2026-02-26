@@ -93,6 +93,28 @@ Ferramentas & DevOps
   - PostgreSQL - Banco de dados relacional.
 
 <br>
+
+Ferramentas & DevOps
+  
+  - Git & GitHub - Versionamento de código.
+  
+  - Docker - Containerização dos serviços.
+  
+  - PostgreSQL - Banco de dados relacional.
+
+<br>
+
+🌐 Ambiente de Produção (Live)
+---
+
+A plataforma está hospedada na nuvem utilizando a infraestrutura do Render com deploy automatizado via Docker. Pode aceder à versão em produção através dos links abaixo:
+
+- Acesso à Aplicação (Front-end): [https://geac-backend.onrender.com]
+- Acesso à API (Back-end): [https://geac-backend.onrender.com]
+
+(Nota: Como a hospedagem utiliza o plano gratuito, o primeiro acesso após um período de inatividade pode demorar cerca de 50 segundos enquanto os servidores "acordam".)
+
+<br>
   
 🚀 Como Executar o Projeto
 ---
