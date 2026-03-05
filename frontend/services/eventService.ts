@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import { Event, EventResponseDTO } from "@/types/event";
-import { mockEvents } from "@/data/mockData";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { API_URL } from "@/app/actions/configs";
 
 /**
  * Mapeia o DTO retornado pelo backend para o tipo Event do frontend.
@@ -27,15 +25,20 @@ function mapBackendToEvent(dto: EventResponseDTO): Event {
     location: dto.onlineLink
       ? "Evento Online"
       : (dto.location?.name ?? "Local Indefinido"),
-    campus: (dto.location?.city?.toLowerCase() || "ondina") as Event["campus"],
+    campus: dto.location?.campus?.toLowerCase() || "Campus Desconhecido",
     speakers: dto.speakers,
     capacity: dto.maxCapacity ?? 0,
-    registered: 0,
-    requirements: dto.requirementDescription,
+    registered: dto.registeredCount ?? 0,
+    requirements: dto.requirements ?? [],
     organizer: dto.organizerName ?? "",
+    organizerEmail: dto.organizerEmail ?? "",
     organizerType: "Professor",
     tags: dto.tags,
-    isRegistered: false,
+    onlineLink: dto.onlineLink ?? "",
+    status: dto.status,
+    isRegistered: dto.isRegistered ?? false,
+    userRegistrationStatus: dto.userRegistrationStatus ?? "",
+    userAttended: dto.userAttended ?? false,
   };
 }
 
@@ -81,13 +84,6 @@ export const eventService = {
     });
 
     if (!res.ok) {
-      const mockEvent = mockEvents.find((event) => event.id === id);
-      if (mockEvent) {
-        console.warn(
-          `Falha ao buscar evento ${id}. Retornando dados mockados.`,
-        );
-        return mockEvent;
-      }
       throw new Error("Evento não encontrado");
     }
 

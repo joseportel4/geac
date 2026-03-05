@@ -17,6 +17,8 @@ describe("EventFilter Component", () => {
         setSelectedCampus={vi.fn()}
         selectedDate=""
         setSelectedDate={vi.fn()}
+        availableCategories={["palestra", "seminario", "cultural", "workshop"]}
+        availableCampuses={["Campus Desconhecido"]}
       />,
     );
 
@@ -45,6 +47,8 @@ describe("EventFilter Component", () => {
         setSelectedCampus={mockSetSelectedCampus}
         selectedDate=""
         setSelectedDate={mockSetSelectedDate}
+        availableCategories={["palestra", "seminario", "cultural", "workshop"]}
+        availableCampuses={["campus desconhecido"]}
       />,
     );
 
@@ -59,9 +63,9 @@ describe("EventFilter Component", () => {
     expect(mockSetSelectedCategory).toHaveBeenCalledWith("workshop");
 
     fireEvent.change(screen.getByLabelText(/campus/i), {
-      target: { value: "ondina" },
+      target: { value: "campus desconhecido" },
     });
-    expect(mockSetSelectedCampus).toHaveBeenCalledWith("ondina");
+    expect(mockSetSelectedCampus).toHaveBeenCalledWith("campus desconhecido");
 
     fireEvent.change(screen.getByLabelText(/data do evento/i), {
       target: { value: "2026-12-25" },

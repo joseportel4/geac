@@ -7,7 +7,7 @@ export interface SignUpData {
   name: string;
   email: string;
   password: string;
-  role: "STUDENT" | "PROFESSOR";
+  role: "STUDENT" | "PROFESSOR" | "ADMIN";
 }
 
 export interface AuthResponse {
@@ -22,12 +22,14 @@ export interface UserPayload {
 }
 
 export interface UserData {
+  id: string;
   name: string;
   email: string;
   role: string;
 }
 
 export interface CustomJwtPayload {
+  id: string;
   exp: number;
   iss: string;
   name: string;

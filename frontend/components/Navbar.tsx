@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { NotificationBell } from "./NotificationBell";
 
 // ✅ CONFIGURAÇÃO CENTRALIZADA - Mude aqui para adicionar/remover itens
 const NAV_CONFIG = {
@@ -13,27 +14,63 @@ const NAV_CONFIG = {
       href: "/events",
       label: "Eventos",
       icon: "📅",
-      roles: ["STUDENT", "PROFESSOR"],
+      roles: ["STUDENT", "PROFESSOR", "ORGANIZER"],
     },
     {
       href: "/meus-eventos",
       label: "Meus Eventos",
       icon: "⭐",
-      roles: ["STUDENT", "PROFESSOR"],
+      roles: ["STUDENT", "PROFESSOR", "ORGANIZER"],
     },
     {
-      href: "/certificados",
+      href: "/certificates",
       label: "Certificados",
       icon: "🎓",
-      roles: ["STUDENT", "PROFESSOR"],
+      roles: ["STUDENT", "PROFESSOR", "ORGANIZER"],
+    },
+    {
+      href: "/requests",
+      label: "Solicitar Acesso",
+      icon: "🔑",
+      roles: ["STUDENT", "PROFESSOR", "ORGANIZER"],
+    },
+    {
+      href: "/events/manage",
+      label: "Gerenciar Eventos",
+      icon: "📋",
+      roles: ["ADMIN", "ORGANIZER"],
     },
   ],
-  professorOnly: [
+  adminOnly: [
     {
-      href: "/events/new",
-      label: "Criar Evento",
-      icon: "➕",
-      roles: ["PROFESSOR"],
+      href: "/admin/register-org",
+      label: "Cadastrar ORG",
+      icon: "🏢",
+      roles: ["ADMIN"],
+    },
+    {
+      href: "/admin/approvals",
+      label: "Aprovações",
+      icon: "✅",
+      roles: ["ADMIN"],
+    },
+    {
+      href: "/admin/student-hours",
+      label: "Horas Alunos",
+      icon: "⏱️",
+      roles: ["ADMIN"],
+    },
+    {
+      href: "/admin/event-statistics",
+      label: "Estatísticas",
+      icon: "📊",
+      roles: ["ADMIN"],
+    },
+    {
+      href: "/admin/org-engagement",
+      label: "Engajamento",
+      icon: "🤝",
+      roles: ["ADMIN"],
     },
   ],
 };
@@ -93,18 +130,19 @@ export function Navbar() {
       (item) => !item.roles || item.roles.includes(user?.role || ""),
     );
 
-    const professorItems =
-      user?.role === "PROFESSOR" ? NAV_CONFIG.professorOnly : [];
+    const adminItems = user?.role === "ADMIN" ? NAV_CONFIG.adminOnly : [];
 
-    return [...baseItems, ...professorItems];
+    return [...baseItems, ...adminItems];
   };
 
   const visibleItems = getVisibleItems();
 
   // ✅ Verifica se link está ativo
   const isActiveLink = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname === href; //|| pathname.startsWith(href + "/");
   };
 
   return (
@@ -149,6 +187,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
+                <NotificationBell />
                 {/* User info - Desktop with dropdown */}
                 <div className="hidden md:block relative" ref={profileRef}>
                   <button
@@ -163,7 +202,11 @@ export function Navbar() {
                         {user?.name || "Usuário"}
                       </p>
                       <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        {user?.role === "PROFESSOR" ? "Professor" : "Estudante"}
+                        {user?.role === "ADMIN"
+                          ? "Admin"
+                          : user?.role === "PROFESSOR"
+                            ? "Professor"
+                            : "Estudante"}
                       </p>
                     </div>
                     <svg
@@ -220,9 +263,11 @@ export function Navbar() {
                                 : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                             }`}
                           >
-                            {user?.role === "PROFESSOR"
-                              ? "👨‍🏫 Professor"
-                              : "🎓 Estudante"}
+                            {user?.role === "ADMIN"
+                              ? "Administrador"
+                              : user?.role === "PROFESSOR"
+                                ? "Professor"
+                                : "Estudante"}
                           </span>
                         </div>
                       </div>

@@ -19,6 +19,7 @@ export async function GET() {
 
     if (decoded.exp && decoded.exp < now) {
       // Token expirado!
+      cookieStore.delete("token"); // Limpa o token expirado
       return NextResponse.json(
         { user: null, error: "Token expirado" },
         { status: 401 },
@@ -26,6 +27,7 @@ export async function GET() {
     }
 
     const user = {
+      id: decoded.id,
       name: decoded.name,
       email: decoded.sub,
       role: decoded.role,

@@ -10,8 +10,22 @@ import {
   Users,
   CheckCircle,
   Tag,
+  Video,
+  Lock,
+  XCircle,
 } from "lucide-react";
 import { EventRegistrationButton } from "@/components/events/EventRegistrationButton";
+import { Event, EventStatus } from "@/types/event";
+import { JSX } from "react";
+import {
+  getEventEvaluations,
+  getUserOrganizers,
+} from "@/app/actions/domainActions";
+import { OrganizerResponseDTO } from "@/types/organizer";
+import { EventEvaluationForm } from "@/components/events/EventEvaluationForm";
+import { EvaluationResponseDTO } from "@/types/evaluations";
+import { EventEvaluationsList } from "@/components/events/EventEvaluationsList";
+import { getCurrentUserId } from "@/app/actions/userActions";
 
 const getCategoryColor = (category: string) => {
   switch (category) {
@@ -40,13 +54,38 @@ export default async function EventDetails({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  let event;
+  let event: Event;
+  let organizers: OrganizerResponseDTO[] = [];
+  let evaluations: EvaluationResponseDTO[] = [];
+  let currentUserId: string | null = null;
+  let hasAlreadyEvaluated = false;
 
   try {
     event = await eventService.getEventById(id);
+    console.log(event.status);
   } catch (error) {
     console.error(error);
     return notFound();
+  }
+
+  try {
+    organizers = await getUserOrganizers();
+  } catch (error) {
+    console.error("Erro ao buscar organizadores:", error);
+  }
+
+  if (event.status === EventStatus.COMPLETED) {
+    try {
+      evaluations = await getEventEvaluations(id);
+      currentUserId = (await getCurrentUserId()) as string;
+      if (currentUserId) {
+        hasAlreadyEvaluated = evaluations.some(
+          (ev) => String(ev.userId) === currentUserId,
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao buscar avaliações do evento:", error);
+    }
   }
 
   const dateObj = new Date(event.date + "T00:00:00");
@@ -57,7 +96,75 @@ export default async function EventDetails({
     day: "numeric",
   });
 
+  const now = new Date();
+
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  }).format(now);
+
+  const currentTimeStr = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(now);
+
+  const isPastDate = event.date < todayStr;
+  const isPastTime =
+    event.date === todayStr && event.startTime <= currentTimeStr;
+  const isPast = isPastDate || isPastTime;
+  const isToday = event.date === todayStr;
+
   const spotsLeft = event.capacity - event.registered;
+  const isFull = spotsLeft <= 0;
+  const isAllowedToEvaluate =
+    event.status === EventStatus.COMPLETED &&
+    event.isRegistered &&
+    event.userAttended;
+
+  const isCanceled = event.status === EventStatus.CANCELLED;
+  const isCompleted = event.status === EventStatus.COMPLETED;
+
+  const handleTopEventTag = (
+    isCanceled: boolean,
+    isCompleted: boolean,
+    isPast: boolean,
+    isFull: boolean,
+    event: Event,
+  ): JSX.Element | null => {
+    if (isCanceled) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+          <XCircle className="w-3.5 h-3.5 mr-1.5" />
+          Cancelado
+        </span>
+      );
+    }
+    if (isCompleted) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-red-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+          <XCircle className="w-3.5 h-3.5 mr-1.5" />
+          Finalizado
+        </span>
+      );
+    }
+    if (isPast) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-zinc-200 text-zinc-700 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700">
+          <Clock className="w-3.5 h-3.5 mr-1.5" />
+          Encerrado
+        </span>
+      );
+    }
+    if (isFull && !event.isRegistered) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800">
+          <Users className="w-3.5 h-3.5 mr-1.5" />
+          Esgotado
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-8">
@@ -79,6 +186,14 @@ export default async function EventDetails({
                 >
                   {event.category}
                 </span>
+
+                {handleTopEventTag(
+                  isCanceled,
+                  isCompleted,
+                  isPast,
+                  isFull,
+                  event,
+                )}
 
                 {event.isRegistered && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
@@ -130,8 +245,8 @@ export default async function EventDetails({
                 Requisitos
               </h3>
               <ul className="list-disc list-inside space-y-2 text-zinc-600 dark:text-zinc-300 ml-1">
-                {event.requirements.map((req, index) => (
-                  <li key={index}>{req}</li>
+                {event.requirements.map((req) => (
+                  <li key={req.id}>{req.description}</li>
                 ))}
               </ul>
             </div>
@@ -152,6 +267,38 @@ export default async function EventDetails({
                 ))}
               </div>
             </div>
+
+            {event.status === EventStatus.COMPLETED && (
+              <>
+                <hr className="border-zinc-200 dark:border-zinc-800 my-8" />
+                <EventEvaluationsList evaluations={evaluations} />
+                <div className="mt-12">
+                  {hasAlreadyEvaluated ? (
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 text-center border border-green-200 dark:border-green-800 mt-8">
+                      <h3 className="text-lg font-bold text-green-900 dark:text-green-400 mb-2">
+                        Avaliação Registrada
+                      </h3>
+                      <p className="text-sm text-green-700 dark:text-green-500">
+                        Você já enviou sua avaliação para este evento.
+                        Agradecemos muito pelo seu feedback!
+                      </p>
+                    </div>
+                  ) : isAllowedToEvaluate ? (
+                    <EventEvaluationForm eventId={event.id} />
+                  ) : (
+                    <div className="bg-zinc-100 dark:bg-zinc-800/50 rounded-xl p-6 text-center border border-zinc-200 dark:border-zinc-700/50 mt-8">
+                      <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
+                        Sua Opinião
+                      </h3>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        Apenas participantes confirmados que registraram
+                        presença podem enviar avaliações.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="lg:col-span-1">
@@ -159,8 +306,36 @@ export default async function EventDetails({
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6">
                 Detalhes do Evento
               </h3>
-
               <div className="space-y-6">
+                {event.onlineLink && !isPast && !isCanceled && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2">
+                      Transmissão Online
+                    </p>
+
+                    {isToday && event.isRegistered ? (
+                      <a
+                        href={event.onlineLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors shadow-sm"
+                      >
+                        <Video className="w-4 h-4" />
+                        Acessar Reunião
+                      </a>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-3 px-4 bg-blue-100/50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-md border border-dashed border-blue-300 dark:border-blue-700 text-center">
+                        <Lock className="w-4 h-4 mb-1" />
+                        <span className="text-xs font-medium">
+                          {event.isRegistered
+                            ? "O link será liberado aqui no dia do evento."
+                            : "Inscreva-se para acessar o link no dia do evento."}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-4">
                   <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg h-fit">
                     <Calendar className="w-5 h-5 text-zinc-500" />
@@ -200,9 +375,11 @@ export default async function EventDetails({
                     <p className="text-zinc-900 dark:text-white font-medium">
                       {event.location}
                     </p>
-                    <p className="text-sm text-zinc-500 capitalize">
-                      {event.campus} Campus
-                    </p>
+                    {!event.onlineLink && (
+                      <p className="text-sm text-zinc-500 capitalize">
+                        {event.campus}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -218,7 +395,7 @@ export default async function EventDetails({
                       {event.organizer}
                     </p>
                     <p className="text-sm text-zinc-500">
-                      {event.organizerType}
+                      {event.organizerEmail}
                     </p>
                   </div>
                 </div>
@@ -235,17 +412,23 @@ export default async function EventDetails({
                       {event.registered} / {event.capacity} inscritos
                     </p>
                     <p className="text-sm text-zinc-500">
-                      {spotsLeft} vagas restantes
+                      {spotsLeft > 0
+                        ? `${spotsLeft} vagas restantes`
+                        : "Nenhuma vaga restante"}
                     </p>
                   </div>
                 </div>
               </div>
-
               <hr className="my-6 border-zinc-200 dark:border-zinc-800" />
-
               <EventRegistrationButton
                 eventId={event.id}
                 isRegistered={event.isRegistered}
+                organizerEmail={event.organizerEmail}
+                isCanceled={isCanceled}
+                isPast={isPast}
+                isFull={isFull}
+                isCompleted={isCompleted}
+                organizers={organizers}
               />
             </div>
           </div>

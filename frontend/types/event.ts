@@ -9,13 +9,13 @@ export type EventCategory =
   | "festival"
   | "outro";
 
-export type Campus =
-  | "reitoria"
-  | "ondina"
-  | "sao lazaro"
-  | "canela"
-  | "graca"
-  | "federacao";
+export enum EventStatus {
+  UPCOMING = "UPCOMING",
+  ACTIVE = "ACTIVE",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
 
 export interface Event {
   id: string;
@@ -26,16 +26,21 @@ export interface Event {
   startTime: string;
   endTime: string;
   location: string;
-  campus: Campus;
+  campus: string;
   speakers: string[];
   capacity: number;
   registered: number;
-  requirements: string[];
+  requirements: Array<{ id: number; description: string }>;
   organizer: string;
+  organizerEmail: string;
   organizerType: string;
   image?: string;
   tags: string[];
-  isRegistered?: boolean;
+  isRegistered: boolean;
+  onlineLink: string;
+  status: EventStatus;
+  userRegistrationStatus: string;
+  userAttended: boolean;
 }
 
 export interface EventRequestDTO {
@@ -44,25 +49,15 @@ export interface EventRequestDTO {
   startTime: string;
   endTime: string;
   categoryId: number;
-  requirementId: number;
+  requirementIds: number[];
   locationId?: number;
   workloadHours: number;
   maxCapacity: number;
   onlineLink?: string;
   tags: number[];
-}
-
-export interface LocationResponseDTO {
-  id: number;
-  name: string;
-  street: string;
-  number: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  referencePoint: string;
-  capacity: number;
+  speakers: number[];
+  orgId: string;
+  daysBeforeNotify?: string;
 }
 
 export interface EventResponseDTO {
@@ -74,20 +69,24 @@ export interface EventResponseDTO {
   endTime: string;
   workloadHours: number;
   maxCapacity: number;
-  status: string;
+  status: EventStatus;
   createdAt: string;
   categoryId: number;
   categoryName: string;
-  location: Location;
+  location: LocationResponseDTO;
   organizerName: string;
   organizerEmail: string;
-  reqId: number;
-  requirementDescription: string[];
+  requirements: RequirementResponseDTO[];
   tags: string[];
   speakers: string[];
+  registeredCount: number;
+  isRegistered: boolean;
+  userRegistrationStatus: string;
+  userAttended: boolean;
+  daysBeforeNotify?: string;
 }
 
-export interface Location {
+export interface LocationResponseDTO {
   id: number;
   name: string;
   street: string;
@@ -96,6 +95,36 @@ export interface Location {
   city: string;
   state: string;
   zipCode: string;
+  campus: string;
   referencePoint: string;
   capacity: number;
+}
+
+export interface RequirementResponseDTO {
+  id: number;
+  description: string;
+}
+
+export interface RegistrationResponseDTO {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  attended: boolean;
+  status: string;
+}
+
+export interface EventPatchRequestDTO {
+  title?: string;
+  description?: string;
+  onlineLink?: string;
+  startTime?: string;
+  endTime?: string;
+  workloadHours?: number;
+  maxCapacity?: number;
+  categoryId?: number;
+  requirementIds?: number[];
+  tags?: number[];
+  locationId?: number;
+  speakers?: number[];
+  orgId?: string;
 }

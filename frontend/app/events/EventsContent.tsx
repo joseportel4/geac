@@ -18,8 +18,22 @@ export default function EventsContent({
   const [selectedCampus, setSelectedCampus] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "proximos" | "disponiveis" | "todos"
+    "proximos" | "disponiveis" | "todos" | "cancelados" | "finalizados"
   >("proximos");
+
+  const availableCategories = useMemo(() => {
+    const categories = new Set(
+      initialEvents.map((event) => event.category).filter(Boolean),
+    );
+    return Array.from(categories).sort((a, b) => a.localeCompare(b));
+  }, [initialEvents]);
+
+  const availableCampuses = useMemo(() => {
+    const campuses = new Set(
+      initialEvents.map((event) => event.campus).filter(Boolean),
+    );
+    return Array.from(campuses).sort((a, b) => a.localeCompare(b));
+  }, [initialEvents]);
 
   const filteredEvents = useMemo(() => {
     return initialEvents.filter((event) => {
@@ -42,9 +56,16 @@ export default function EventsContent({
       const today = new Date().toISOString().split("T")[0];
 
       if (activeTab === "proximos") {
-        matchesTab = event.date >= today;
+        matchesTab = event.date >= today && event.status != "CANCELLED";
       } else if (activeTab === "disponiveis") {
-        matchesTab = event.registered < event.capacity;
+        matchesTab =
+          event.registered < event.capacity &&
+          event.status != "CANCELLED" &&
+          event.status != "COMPLETED";
+      } else if (activeTab === "cancelados") {
+        matchesTab = event.status === "CANCELLED";
+      } else if (activeTab === "finalizados") {
+        matchesTab = event.status === "COMPLETED";
       }
 
       return (
@@ -88,6 +109,8 @@ export default function EventsContent({
           setSelectedCampus={setSelectedCampus}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
+          availableCategories={availableCategories}
+          availableCampuses={availableCampuses}
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
